@@ -13,6 +13,7 @@ function checkout() {
 
   // Refresh the page after the modal is closed
   setTimeout(() => {
+    localStorage.clear();
     location.reload();
   }, 3000);
 }
