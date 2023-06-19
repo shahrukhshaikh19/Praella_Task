@@ -17,6 +17,9 @@ function checkout() {
     location.reload();
   }, 3000);
 }
+window.addEventListener("beforeunload", function () {
+  localStorage.clear();
+});
 // Function to handle button clicks
 function showContainer(container) {
   // Hide all containers
@@ -157,6 +160,78 @@ monthselection.forEach((image) => {
 
 // Get references to the containers and buttons in the third container
 
+// dyamic image rendering start
+
+const imageUrl = "./assets/lavazza_coffee.png"; // URL for the image used for all cards except the first one
+const Image1 = "./assets/van_houtte.png"; // URL for the image used for the first card
+const numOfCards = 12; // Number of image cards to create
+
+// Get a reference to the container element
+var container = document.querySelector(".roast_main_container");
+
+// Loop through the image sources array
+for (var i = 0; i < numOfCards; i++) {
+  console.log(i);
+  // Create the container div
+  var roastContainer = document.createElement("div");
+  roastContainer.className = "roast_container";
+
+  // Create the image wrapper div
+  var roastImgWrapper = document.createElement("div");
+  roastImgWrapper.className = "roastimgwrapper";
+
+  // Create the image element
+  var img = document.createElement("img");
+  img.className = "roast_img";
+  img.alt = "Image " + (i + 1);
+
+  // Set the src attribute based on the image source
+  img.src = i === 0 ? imageUrl : Image1;
+
+  // Create the subheading div
+  var roastSubheading = document.createElement("div");
+  roastSubheading.className = "roastsubheading";
+
+  // Create the name paragraph
+  var nameParagraph = document.createElement("p");
+  nameParagraph.className = "roastname";
+  nameParagraph.textContent = i === 0 ? "Lavazza Coffee" : "Van Houtte";
+
+  // Create the feature paragraph
+  var featureParagraph = document.createElement("p");
+  featureParagraph.className = "roastFeature";
+  featureParagraph.textContent =
+    i === 0 ? "EXOTIC • RICH • AROMATIC" : "CLASSIC • NUTTY • ROUND BODY";
+
+  // Create the select button
+  var selectButton = document.createElement("div");
+  selectButton.className = "roast_btn";
+  selectButton.textContent = "Select";
+
+  // Create the subheading div
+  var overButton = document.createElement("div");
+  overButton.className = "overButton";
+  i === 1 || i === 9
+    ? (overButton.textContent = "DARK ROAST")
+    : i === 2 || i === 6
+    ? (overButton.textContent = "LIGHT ROAST")
+    : "";
+
+  // Append all elements together
+  roastSubheading.appendChild(nameParagraph);
+  roastSubheading.appendChild(featureParagraph);
+  roastSubheading.appendChild(selectButton);
+  roastImgWrapper.appendChild(img);
+  roastImgWrapper.appendChild(roastSubheading);
+  i === 1 || i === 2 || i === 6 || i === 9
+    ? roastImgWrapper.appendChild(overButton)
+    : "";
+  roastContainer.appendChild(roastImgWrapper);
+  container.appendChild(roastContainer);
+}
+
+// dynamic image rendering end
+
 const selectButtons = thirdContainer.querySelectorAll(".roast_btn");
 const thirdButton = document.getElementById("thirdnext");
 thirdButton.style.opacity = "0.3";
@@ -179,8 +254,17 @@ function handleRoastContainerClick(event) {
     container.classList.remove("selected");
     selectButton.textContent = "Select";
     container.classList.remove("roastactive");
-    // const itemArray = localStorage.setItem([]);
-    // itemArray.push(container.querySelector(".roastname").textContent)
+
+    const itemArray = JSON.parse(localStorage.getItem("items_array")) || [];
+    const roastItem = container.querySelector(".roastname").textContent;
+    const index = itemArray.indexOf(roastItem);
+    if (index === -1) {
+      itemArray.push(roastItem);
+    } else {
+      itemArray.splice(index, 1);
+    }
+    localStorage.setItem("items_array", JSON.stringify(itemArray));
+
     nextBtn();
   } else {
     // Get the total count of selected containers
@@ -188,15 +272,34 @@ function handleRoastContainerClick(event) {
 
     // Check if the maximum selectable count is reached
     if (selectedCount < maxSelectableCount) {
-      const newValue = localStorage.getItem("items_array") || [];
-      const itemArray = [];
-      itemArray.push(container.querySelector(".roastname").textContent);
+      const itemArray = JSON.parse(localStorage.getItem("items_array")) || [];
+      const roastItem = container.querySelector(".roastname").textContent;
+      itemArray.push(roastItem);
 
-      localStorage.setItem("items_array", itemArray);
+      localStorage.setItem("items_array", JSON.stringify(itemArray));
+
+      //reduce
+
+      // Count occurrences of "Lavazza Coffee" and "Van Houtte" in itemArray
+      var lavazzaCount = itemArray.reduce(function (count, roastItem) {
+        return count + (roastItem === "Lavazza Coffee" ? 1 : 0);
+      }, 0);
+
+      var vanHoutteCount = itemArray.reduce(function (count, roastItem) {
+        return count + (roastItem === "Van Houtte" ? 1 : 0);
+      }, 0);
+
+      console.log("Lavazza Coffee count:", lavazzaCount);
+      console.log("Van Houtte count:", vanHoutteCount);
+
+      //reduce
+      console.log(itemArray.includes("Lavazza Coffee"));
 
       const setTagValue = summaryContainer.querySelectorAll(".roastsubTag");
-      setTagValue[0].textContent = "Lavazza Coffee";
-      setTagValue[1].textContent = "Van Houtte";
+      lavazzaCount !== 0
+        ? (setTagValue[0].textContent = `${"Lavazza Coffee"} x ${lavazzaCount}`)
+        : (setTagValue[0].textContent = "");
+      setTagValue[1].textContent = ` ${"Van Houtte"} x ${vanHoutteCount}`;
 
       // Select the container
       container.classList.add("selected");
